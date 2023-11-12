@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='utf-8' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            axios.get("https://eventsapi.onrender.com/api/Events").then((res) => {
+                var calendarEl = document.getElementById('calendar');
+                var calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    events: res.data,
+                });
+                calendar.render();
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div id='calendar'></div>
+    <input id="date" type="date" placeholder="הכנס תאריך" value="2023-09-06">
+    <input id="text" type="text" placeholder="הכנס אירוע" value="אירוע">
+    <button onclick="addEvent()">Add Event</button>
+    <button onclick="deleteEvent()">Delete Event</button>
+    <div id="events"></div>
+    <button onclick="updateEvent()">Update Event</button>
+    <div id="update"></div>
+    <script>
+
+        function addEvent() {
+            axios.post("https://localhost:7160/api/Events", {
+                "title": document.getElementById("text").value,
+                "start": document.getElementById("date").value
+            });
+        }
+        function deleteEvent() {
+            axios.get("https://localhost:7160/api/Events").then((res) => {
+                let events = "";
+                for (items of res.data) {
+                    events += `<button id="${items.id}"onclick="deleteE(${items.id} )">The date is:${items.start}. the event is:${items.title}</button><br/>`
+                }
+                document.getElementById("events").innerHTML = events;
+            });
+        }
+        function deleteE(id) {
+            axios.delete(`https://localhost:7160/api/Events/${id}`);
+            document.getElementById("events").innerHTML = " ";
+        }
+        function updateEvent() {
+            axios.get("https://localhost:7160/api/Events").then((res) => {
+                let events = "";
+                for (items of res.data) {
+                    events += `<button id="${items.id}"onclick="updateE(${items.id})">The date is:${items.start}. the event is:${items.title}</button><br/>`
+                }
+                document.getElementById("events").innerHTML = events;
+            });
+        }
+        function updateE(id,start,title) {
+            axios.put(`https://localhost:7160/api/Events/${id}`,
+                {
+                    "title": document.getElementById("text").value,
+                    "start": document.getElementById("date").value
+                });
+            document.getElementById("events").innerHTML = " ";
+        }
+    </script>
+</body>
+
+</html>
