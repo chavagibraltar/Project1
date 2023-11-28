@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using web_api.Entities;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -9,41 +10,69 @@ namespace web_api.Controllers
     public class EventsController : ControllerBase
     {
 
-        //public static int count = 4;
-        public static List<Event> events = new List<Event> { new Event { Id = 1, Title = "default event1",Start=DateTime.Now },
-         new Event { Id = 2, Title = "default event2",Start=DateTime.Now }
-        , new Event { Id = 3, Title = "default event3",Start=DateTime.Now } };
+        private IDataContext dataContext;
 
-
+        public EventsController(IDataContext dataContext)
+        {
+            this.dataContext = dataContext;
+        }
         // GET: api/<EventsController>
         [HttpGet]
-        public IEnumerable<Event> Get()
+        public ActionResult Get()
         {
-            return events;
-        }   
+            return Ok(dataContext.Events);
+        }
+
+        // GET: api/<EventsController>
+        [HttpGet("{id}")]
+        public ActionResult Get(int id)
+        {
+            var eve = dataContext.Events.Find(e => e.Id == id);
+            if (eve is null)
+            {
+                return NotFound();
+            }
+            return Ok(eve);
+        }
+
 
         // POST api/<EventsController>
         [HttpPost]
-        public void Post([FromBody] Event newEvent)
+        public ActionResult Post([FromBody] Event newEvent)
         {
-            events.Add(new Event { Id = newEvent.Id, Title = newEvent.Title, Start = newEvent.Start, End = newEvent.End });
+            if(newEvent.Id == 0)
+                return NotFound();
+            dataContext.Events.Add(newEvent);
+            return Ok();
         }
 
         // PUT api/<EventsController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] Event newEvent)
+        public ActionResult Put(int id, [FromBody] Event newEvent)
         {
-            var eve = events.Find(e => e.Id == id);
-            eve.Start = newEvent.Start;
-            eve.End = newEvent.End;
-            eve.Title = newEvent.Title;
+            var eve = dataContext.Events.Find(e => e.Id == id);
+            if(eve is null)
+            {
+                return NotFound();
+            }
+
+            dataContext.Events.Remove(eve);
+            dataContext.Events.Add(newEvent);
+            return Ok();
+            
         }
 
         // DELETE api/<EventsController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public ActionResult Delete(int id)
         {
-            events.Remove(events.Find(e => e.Id == id));
+            var eve = dataContext.Events.Find(e => e.Id == id);
+            if (eve is null)
+            {
+                return NotFound();
+            }
+            dataContext.Events.Remove(eve);
+            return Ok();
         }
     }
 }
